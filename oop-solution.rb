@@ -1,8 +1,6 @@
-
 class Player
   def initialize
       @health = 20
-      @direction = :backward
   end
     
   def play_turn(warrior)
@@ -13,8 +11,9 @@ class Player
     help = Help.new warrior
     retreat = Retreat.new warrior
     pivot = Pivot.new warrior
+    shoot = Shoot.new warrior
     
-    for action in [attack, retreat, health, help, walk, pivot]
+    for action in [attack, shoot, retreat, health, help, walk, pivot]
       if action.can?(@health)
         action.go!
         break
@@ -42,14 +41,10 @@ end
   
 class Attack < WarriorAction
   def can?(health)
-    @warrior.feel.enemy? || (@warrior.look.any? { |space| space.enemy? } && ! @warrior.look.any? { |space| space.captive? })
+    @warrior.feel.enemy?
   end
   def go!
-    if @warrior.feel.enemy?
-      @warrior.attack!
-    else
-      @warrior.shoot!
-    end
+    @warrior.attack!
   end
 end
 
@@ -73,7 +68,7 @@ end
 
 class Retreat < WarriorAction
   def can?(health)
-    @warrior.health < health && @warrior.feel(:backward).empty? && @warrior.health < 10
+    @warrior.health < health && @warrior.feel(:backward).empty? && @warrior.health < 15
   end
   def go!
     @warrior.walk!(:backward)
@@ -86,5 +81,14 @@ class Pivot < WarriorAction
   end
   def go!
     @warrior.pivot!
+  end
+end
+
+class Shoot < WarriorAction
+  def can?(health)
+    @warrior.look.any? { |space| space.enemy? } && ! @warrior.look.any? { |space| space.captive? } && @warrior.health >= health
+  end
+  def go!
+    @warrior.shoot!
   end
 end
